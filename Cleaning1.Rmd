@@ -1,0 +1,126 @@
+---
+title: "Cleaning1"
+author: "N. Cheikh"
+date: "April 8, 2018"
+output: html_document
+---
+###Step 1: Upload the data text files to desktop from github: 
+https://github.com/slevkoff/ECON386REPO/tree/master/Data%20Cleaning%20Project/Task%201
+
+###Step 2: Import the datasets into R and label
+```{r}
+subject_test <- read.table("~/Desktop/subject_test.txt") 
+#Reads the file in table formate and creates a dataframe, labeled "subject_test".
+subject_train <- read.table("~/Desktop/subject_train.txt")
+X_test <- read.table("~/Desktop/X_test.txt")
+X_train <- read.table("~/Desktop/X_train.txt")
+y_test <- read.table("~/Desktop/y_test.txt")
+y_train <- read.table("~/Desktop/y_train.txt")
+features <- read.table("~/Desktop/features.txt")
+```
+###Step 3: Rename the Variables for the **y** and **subject** dataframes
+```{r}
+colnames(subject_train)[colnames(subject_train)=="V1"] <- "Subject" 
+# Renames the variable name "V1" with "Subject".
+colnames(subject_test)[colnames(subject_test)=="V1"] <- "Subject"
+colnames(y_test)[colnames(y_test)=="V1"] <- "Activity" 
+# Renames the variable name "V1" with "Activity".
+colnames(y_train)[colnames(y_train)=="V1"] <- "Activity"
+```
+###Step 4: Create new transposed dataframe for **features**
+```{r}
+features1 <- features 
+# Creates new dataframe of features.
+features1$V1 = NULL 
+#Removes the first column of the dataframe.
+features2 <- t(features1) 
+# Creates a new dataframe of features1, which is the transpose of features1, labeled features2. This will be used to label the variables of X_test and X_train.
+```
+###Step 5: Create new dataframes for **X_test** and **X_train** with column names
+```{r}
+X_test1 <- X_test 
+#Creates new dataframe of X_test, called X_test1.
+X_train1 <- X_train 
+#Creates new dataframe of X_test, called X_test1.
+
+
+#Change the column names of X_test1 and X_train1 with features2
+colnames(X_test1) <- features2[1, ] 
+#Uses features2 dataframe to name the column names of X_test1.
+colnames(X_train1) <- features2[1, ]
+```
+###Step 6: Extract only the mean and standard deviation variables of the **X** dataframes
+```{r}
+Varnames_test1 <- names(X_test1) 
+#Creates a vector of the variable names of X_test1 and label"Varnames_test1", labeled "Varnames_test1".
+Varnames_test2 <-  (grepl("mean", Varnames_test1 , fixed=TRUE)|grepl("std", Varnames_test1 , fixed=TRUE)) 
+#Creates a vector of the logic argument: if the variable includes "mean" or "std", True; if not, False, labeled "Varnames_test2".
+ X_test2 <- X_test1[,Varnames_test2] 
+ #Creates dataframe of X_test1 that contains only the columns from Varnames_test2 that are True, labeled "X_test2".
+
+ 
+Varnames_train1<- names(X_train1) 
+#Creates a vector of the variable names of X_train1, labeled"Varnames_train1".
+Varnames_train2 <- (grepl("mean", Varnames_train1 , fixed=TRUE)|grepl("std", Varnames_train1 , fixed=TRUE)) 
+#Creates vector of the logic argument: if the variable includes "mean" or "std", True; if not, False.
+X_train2 <-X_train1[,Varnames_train2]
+#Creates dataframe of X_train1 that contains only the columns from Varnames_train2 that are True, labeled "X_train2".
+```
+
+###Step 8: Combine the columns of **test** and **train** dataframes, seperately
+```{r}
+test <- cbind(subject_test, y_test, X_test2) 
+#Combines subject_test, y_test, and X_test2, labeled "test"
+train <- cbind(subject_train, y_train, X_train2)
+#Combines subject_train, y_train, and X_train2, labeled "train"
+```
+###Step 9: Combine the Rows and Arrange
+```{r}
+Task1.1 <- rbind(train, test) 
+#Combines train and test, labled Task1.1. This is the merged dataframe.
+library(plyr)
+# load "plyr" package
+Task1.2 <- arrange(Task1.1, Subject, Activity) 
+#Arranges the observations by Subject, then by Activity.
+```
+###Step 10: Change the Activity values to descriptive activity names
+```{r}
+Task1.3 <- Task1.2 #Creates a new dataframe of Task1.2, labeled Task1.3
+Task1.3$Activity[Task1.3$Activity==1]<- "WALKING" 
+#Changes the value of the Activity from "1" to "WALKING".
+Task1.3$Activity[Task1.3$Activity==2]<- "WALKING_UPSTAIRS"
+Task1.3$Activity[Task1.3$Activity==3]<- "WALKING_DOWNSTAIRS"
+Task1.3$Activity[Task1.3$Activity==4]<- "SITTING"
+Task1.3$Activity[Task1.3$Activity==5]<- "STANDING"
+Task1.3$Activity[Task1.3$Activity==6]<- "LAYING"
+```
+
+####**The tidy data set Task1.3:**
+#####1. merges the training and the testing sets,
+#####2. extracts only the measurements on the mean and standard deviation for each measurement, 
+#####3. uses descriptive activity names to name the activities in the data set, and
+#####4. appropriately labels the data set with descriptive variable names.
+
+
+###Step 11. Create a second, independent tidy data set with the average of each variable for each activity and each subject.
+```{r}
+library(tidyr) #install and load the packages: tidyr and dplyr 
+library(dplyr)
+Task1.4 <- Task1.2 %>% group_by(Subject, Activity) %>% summarise_all(funs(mean)) 
+#Create a new dataframe of Task1.2*, which is grouped by Subject, then by Activity, where the rest of the variables are the average for each subject and activity. * Task1.2 is used instead of Task 1.3 in order to preserve the arrangement of activities.
+```
+###Step 12: Create descriptive activity names for the Activity variable for the independent tidy set, **Task1.4**
+```{r}
+Task1.4$Activity[Task1.4$Activity==1]<- "WALKING" 
+#Changes the value of the Activity from "1" to "WALKING"
+Task1.4$Activity[Task1.4$Activity==2]<- "WALKING_UPSTAIRS"
+Task1.4$Activity[Task1.4$Activity==3]<- "WALKING_DOWNSTAIRS"
+Task1.4$Activity[Task1.4$Activity==4]<- "SITTING"
+Task1.4$Activity[Task1.4$Activity==5]<- "STANDING"
+Task1.4$Activity[Task1.4$Activity==6]<- "LAYING"
+```
+###Step 10: Save **Task1.4** using write.table(), as **tidy1.txt**
+```{r}
+write.table(Task1.4, "tidy1.txt", row.names=F, col.names=T, sep="\t", quote=F) 
+#Saves the tidy set Task1.4 as the text file, "tidy1.txt"
+```
